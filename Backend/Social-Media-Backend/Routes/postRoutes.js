@@ -4,7 +4,6 @@ const postRouter = express.Router();
 import authMiddleware from '../middleware/authMiddleware.js';
 import Post from '../Models/postModel.js'
 import User from '../Models/userModel.js'
-import comment from "../Models/commentModel.js"
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -22,7 +21,6 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 // Configure multer for file uploads
-//
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadsDir);
@@ -68,7 +66,7 @@ postRouter.post("/", authMiddleware, upload.array("images",4), async (req,res)=>
 
     await post.save();
 
-    await post.populate("author","username email displayName profilePicture");
+    await post.populate("author","username email name profileImage");
 
     res.status(201).json(post);
 
@@ -93,8 +91,9 @@ postRouter.get('/feed', authMiddleware, async (req, res) => {
         { author: req.userId }
       ]
     })
-      .populate('author', 'username displayName profilePicture verified')
-      .populate('comments.user', 'username displayName profilePicture')
+      .populate('author', 'username name profileImage verified')
+      .populate('comments.user', 'username name profileImage')
+      .populate('comments.replies.user', 'username name profileImage')
       .sort({ createdAt: -1 })
       .limit(50);
 
@@ -112,8 +111,9 @@ postRouter.get('/all', async (req, res) => {
   try {
 
     const posts = await Post.find()
-      .populate('author', 'username displayName profilePicture')
-      .populate('comments.user', 'username displayName profilePicture')
+      .populate('author', 'username name profileImage verified')
+      .populate('comments.user', 'username name profileImage')
+      .populate('comments.replies.user', 'username name profileImage')
       .sort({ createdAt: -1 })
       .limit(50);
 
@@ -131,8 +131,9 @@ postRouter.get('/user/:userId', async (req, res) => {
     const { userId } = req.params;
     
     const posts = await Post.find({ author: userId })
-      .populate('author', 'username displayName profilePicture verified')
-      .populate('comments.user', 'username displayName profilePicture')
+      .populate('author', 'username name profileImage verified')
+      .populate('comments.user', 'username name profileImage')
+      .populate('comments.replies.user', 'username name profileImage')
       .sort({ createdAt: -1 });
 
     res.json(posts);
@@ -148,8 +149,9 @@ postRouter.get('/:postId', async (req, res) => {
   try {
 
     const post = await Post.findById(req.params.postId)
-      .populate('author', 'username displayName profilePicture verified')
-      .populate('comments.user', 'username displayName profilePicture');
+      .populate('author', 'username name profileImage verified')
+      .populate('comments.user', 'username name profileImage')
+      .populate('comments.replies.user', 'username name profileImage');
 
     if (!post) {
       return res.status(404).json({ error: 'Post not found' });
@@ -195,9 +197,7 @@ postRouter.post('/:postId/like', authMiddleware, async (req, res) => {
 
     await post.save();
 
-    // Populate the author and likes (optional)
-    await post.populate('author', 'username displayName profilePicture');
-    await post.populate('likes', 'username displayName profilePicture');
+    await post.populate('author', 'username name profileImage verified');
 
     res.json(post);
 
@@ -226,8 +226,7 @@ postRouter.post('/:postId/share',authMiddleware, async (req, res) => {
     }
 
     await post.save();
-    await post.populate('user', 'username displayName profilePicture');
-
+    
     res.json(post);
 
   } catch (error) {
@@ -249,7 +248,7 @@ postRouter.post('/:postId/comment', authMiddleware, async (req, res) => {
     const post = await Post.findById(req.params.postId);
     if (!post) return res.status(404).json({ error: 'Post not found' });
 
-              // Add new comment
+    // Add new comment
     post.comments.push({
       user: req.userId,
       content
@@ -269,13 +268,61 @@ postRouter.post('/:postId/comment', authMiddleware, async (req, res) => {
       });
     }
 
-    await post.populate('author', 'username displayName profilePicture');
-    await post.populate('comments.user', 'username displayName profilePicture');
+    await post.populate('author', 'username name profileImage verified');
+    await post.populate('comments.user', 'username name profileImage');
+    await post.populate('comments.replies.user', 'username name profileImage');
 
     res.json(post);
 
   } catch (error) {
     console.error('Add comment error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Add reply to comment
+postRouter.post('/:postId/comment/:commentId/reply', authMiddleware, async (req, res) => {
+  try {
+    const { content } = req.body;
+
+    if (!content || content.trim() === '') {
+      return res.status(400).json({ error: 'Reply content is required' });
+    }
+
+    const post = await Post.findById(req.params.postId);
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ error: 'Comment not found' });
+
+    // Add nested reply
+    comment.replies.push({
+      user: req.userId,
+      content
+    });
+
+    await post.save();
+
+    // Create notification for comment author
+    if (comment.user.toString() !== req.userId.toString()) {
+      const Notification = (await import('../Models/notificationModel.js')).default;
+      await Notification.create({
+        receiverId: comment.user,
+        senderId: req.userId,
+        type: 'reply',
+        postId: post._id,
+        text: content.substring(0, 50)
+      });
+    }
+
+    await post.populate('author', 'username name profileImage verified');
+    await post.populate('comments.user', 'username name profileImage');
+    await post.populate('comments.replies.user', 'username name profileImage');
+
+    res.json(post);
+
+  } catch (error) {
+    console.error('Add reply error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -304,4 +351,4 @@ postRouter.delete('/:postId', authMiddleware, async (req, res) => {
 });
 
 
-export default postRouter
+export default postRouter;

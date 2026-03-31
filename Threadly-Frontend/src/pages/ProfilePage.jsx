@@ -5,6 +5,7 @@ import Avatar from '../components/common/Avatar'
 import VerifiedBadge from '../components/common/VerifiedBadge'
 import PostCard from '../components/post/PostCard'
 import FollowButton from '../components/user/FollowButton'
+import UserCard from '../components/user/UserCard'
 import Modal from '../components/common/Modal'
 import Spinner from '../components/common/Spinner'
 import { usePosts } from '../hooks/usePosts'
@@ -23,8 +24,10 @@ export default function ProfilePage() {
   const [editOpen, setEditOpen] = useState(false)
   const [editForm, setEditForm] = useState({ name: currentUser?.name || '', bio: currentUser?.bio || '' })
   const [activeTab, setActiveTab] = useState('posts')
+  const [followModal, setFollowModal] = useState({ isOpen: false, type: 'followers' })
 
   useEffect(() => {
+    setFollowModal(prev => ({ ...prev, isOpen: false }));
     const fetchProfile = async () => {
       try {
         setProfileLoading(true)
@@ -158,8 +161,12 @@ export default function ProfilePage() {
         </div>
         {profileUser?.bio && <p className={`${text.bodyMd} mb-3`}>{profileUser.bio}</p>}
         <div className="flex gap-4 sm:gap-6 flex-wrap">
-          <span><strong className={text.stat}>{profileUser?.following?.length || 0}</strong> <span className={text.statLabel}>Following</span></span>
-          <span><strong className={text.stat}>{profileUser?.followers?.length || 0}</strong> <span className={text.statLabel}>Followers</span></span>
+          <span className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setFollowModal({ isOpen: true, type: 'following' })}>
+            <strong className={text.stat}>{profileUser?.following?.length || 0}</strong> <span className={text.statLabel}>Following</span>
+          </span>
+          <span className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setFollowModal({ isOpen: true, type: 'followers' })}>
+            <strong className={text.stat}>{profileUser?.followers?.length || 0}</strong> <span className={text.statLabel}>Followers</span>
+          </span>
           <span><strong className={text.stat}>{userPosts.length}</strong> <span className={text.statLabel}>Posts</span></span>
         </div>
       </div>
@@ -203,6 +210,21 @@ export default function ProfilePage() {
             <button className={btn.secondaryLg} onClick={() => setEditOpen(false)}>Cancel</button>
             <button className={btn.primaryLg} onClick={handleEditSave}>Save</button>
           </div>
+        </div>
+      </Modal>
+
+      {/* Followers/Following Modal */}
+      <Modal isOpen={followModal.isOpen} onClose={() => setFollowModal(p => ({ ...p, isOpen: false }))} title={followModal.type === 'followers' ? 'Followers' : 'Following'}>
+        <div className="flex flex-col max-h-[60vh] overflow-y-auto no-scrollbar">
+          {followModal.type === 'followers' ? (
+            profileUser?.followers?.length > 0 ? (
+              profileUser.followers.map(u => <UserCard key={u._id} user={u} compact />)
+            ) : <div className="p-4 text-center text-ink-light">No followers yet</div>
+          ) : (
+            profileUser?.following?.length > 0 ? (
+              profileUser.following.map(u => <UserCard key={u._id} user={u} compact />)
+            ) : <div className="p-4 text-center text-ink-light">Not following anyone yet</div>
+          )}
         </div>
       </Modal>
     </div>

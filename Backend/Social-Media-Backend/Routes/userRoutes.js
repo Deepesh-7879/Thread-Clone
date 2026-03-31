@@ -60,8 +60,8 @@ userRouter.get('/me', authMiddleware, async (req, res) => {
 
     const user = await User.findById(req.userId)
       .select('-password')
-      .populate('followers', 'username displayName profilePicture')
-      .populate('following', 'username displayName profilePicture');
+      .populate('followers', 'username name profileImage')
+      .populate('following', 'username name profileImage');
 
     res.json(user);
 
@@ -117,8 +117,8 @@ userRouter.get('/:username', async (req, res) => {
 
     const user = await User.findOne({ username: req.params.username })
       .select('-password')
-      .populate('followers', 'username displayName profilePicture')
-      .populate('following', 'username displayName profilePicture');
+      .populate('followers', 'username name profileImage')
+      .populate('following', 'username name profileImage');
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -140,14 +140,14 @@ userRouter.get('/:username', async (req, res) => {
 userRouter.put('/profile', authMiddleware, async (req, res) => {
   try {
 
-    const { displayName, bio } = req.body;
+    const { name, bio } = req.body;
 
     const updates = {};
 
-    if (displayName) updates.displayName = displayName;
+    if (name) updates.name = name;
     if (bio !== undefined) updates.bio = bio;
 
-    const user = await user.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
       req.userId,
       updates,
       { new: true }
@@ -173,11 +173,11 @@ userRouter.post('/profile-picture', authMiddleware, upload.single('image'), asyn
 
     const user = await User.findByIdAndUpdate(
       req.userId,
-      { profilePicture: imageUrl },
+      { profileImage: imageUrl },
       { new: true }
     ).select('-password');
 
-    res.json({ profilePicture: imageUrl, user });
+    res.json({ profileImage: imageUrl, user });
 
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -264,7 +264,7 @@ userRouter.get('/:userId/followers', async (req, res) => {
   try {
 
     const user = await User.findById(req.params.userId)
-      .populate('followers', 'username displayName profilePicture bio');
+      .populate('followers', 'username name profileImage bio');
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -283,7 +283,7 @@ userRouter.get('/:userId/following', async (req, res) => {
   try {
 
     const user = await User.findById(req.params.userId)
-      .populate('following', 'username displayName profilePicture bio');
+      .populate('following', 'username name profileImage bio');
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });

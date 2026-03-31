@@ -8,7 +8,7 @@ import { formatDate } from '../../utils/formatDate'
 import { useAuth } from '../../hooks/useAuth'
 import { post as P, text } from '../../styles/common'
 
-export default function PostCard({ post, onLike, onBookmark, onAddComment, onDeletePost, compact = false }) {
+export default function PostCard({ post, onLike, onBookmark, onAddComment, onAddReply, onDeletePost, compact = false }) {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [showComments, setShowComments] = useState(false)
@@ -71,7 +71,7 @@ export default function PostCard({ post, onLike, onBookmark, onAddComment, onDel
 
           {/* Comments */}
           {showComments && (
-            <CommentList comments={post.comments} postId={post._id} onAddComment={onAddComment} />
+            <CommentList comments={post.comments} postId={post._id} onAddComment={onAddComment} onAddReply={onAddReply} />
           )}
         </div>
       </div>

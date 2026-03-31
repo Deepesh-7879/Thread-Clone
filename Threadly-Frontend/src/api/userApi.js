@@ -6,4 +6,7 @@ export const userApi = {
   unfollowUser:      (userId)   => axiosInstance.post(`/users/${userId}/unfollow`),
   searchUsers:       (query='') => axiosInstance.get('/users/search', { params: { q: query } }),
   getSuggestedUsers: ()         => axiosInstance.get('/users/suggested'),
+  uploadProfilePicture: (formData) => axiosInstance.post('/users/profile-picture', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
 }

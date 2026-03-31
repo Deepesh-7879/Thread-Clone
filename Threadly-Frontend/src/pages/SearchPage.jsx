@@ -12,7 +12,7 @@ export default function SearchPage() {
   const [query, setQuery] = useState('')
   const [tab, setTab] = useState('users')
   const { user } = useAuth()
-  const { posts, loading, toggleLike, toggleBookmark, addComment } = usePosts()
+  const { posts, loading, toggleLike, toggleBookmark, addComment, addReply } = usePosts()
 
   const [users, setUsers] = useState([])
   const [loadingUsers, setLoadingUsers] = useState(true)
@@ -80,7 +80,8 @@ export default function SearchPage() {
         <PostCard key={p._id} post={p}
           onLike={id => toggleLike(id, user?._id)}
           onBookmark={id => toggleBookmark(id, user?._id)}
-          onAddComment={(postId, comment) => addComment(postId, comment, user)} />
+          onAddComment={(postId, comment) => addComment(postId, comment, user)}
+          onAddReply={(postId, commentId, txt) => addReply(postId, commentId, txt, user)} />
       ))}
     </div>
   )

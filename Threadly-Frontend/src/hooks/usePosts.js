@@ -144,7 +144,8 @@ export function usePosts() {
         profilePicture: currentUser?.profilePicture
       },
       content: comment,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      replies: []
     }
     
     // Optimistic check
@@ -158,6 +159,43 @@ export function usePosts() {
       await postApi.addComment(postId, comment)
     } catch (error) {
       console.error('Error adding comment:', error)
+    }
+  }, [])
+
+  const addReply = useCallback(async (postId, commentId, content, currentUser) => {
+    const newReply = {
+      _id: 'r' + Date.now().toString(),
+      user: { 
+        _id: currentUser?._id, 
+        name: currentUser?.name || 'User', 
+        username: currentUser?.username,
+        profileImage: currentUser?.profileImage
+      },
+      content: content,
+      createdAt: new Date().toISOString()
+    }
+    
+    // Optimistic check
+    setPosts(prev =>
+      prev.map(p => {
+        if (p._id === postId) {
+          return {
+            ...p,
+            comments: p.comments.map(c => 
+              c._id === commentId 
+                ? { ...c, replies: [...(c.replies || []), newReply] } 
+                : c
+            )
+          }
+        }
+        return p;
+      })
+    )
+    
+    try {
+      await postApi.addReply(postId, commentId, content)
+    } catch (error) {
+      console.error('Error adding reply:', error)
     }
   }, [])
 
@@ -177,6 +215,7 @@ export function usePosts() {
     toggleLike,
     toggleBookmark,
     addComment,
+    addReply,
     deletePost
   }
 }

@@ -38,7 +38,7 @@ function pickRandom(arr, n) {
 
 export default function HomePage() {
   const { user } = useAuth()
-  const { posts, loading, createPost, toggleLike, toggleBookmark, addComment, deletePost } = usePosts()
+  const { posts, loading, createPost, toggleLike, toggleBookmark, addComment, addReply, deletePost } = usePosts()
 
   // Re-randomized on every mount (every login / page refresh)
   const suggestedUsers = useMemo(() => pickRandom(ALL_USERS, 3), [])
@@ -61,6 +61,7 @@ export default function HomePage() {
               onLike={id => toggleLike(id, user?._id)}
               onBookmark={id => toggleBookmark(id, user?._id)}
               onAddComment={(postId, comment) => addComment(postId, comment, user)}
+              onAddReply={(postId, commentId, txt) => addReply(postId, commentId, txt, user)}
               onDeletePost={deletePost} />
           </div>
         ))}

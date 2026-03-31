@@ -9,7 +9,7 @@ import { text, misc } from '../styles/common'
 export default function PostDetailPage() {
   const { id } = useParams()
   const { user } = useAuth()
-  const { posts, loading, toggleLike, toggleBookmark, addComment, deletePost } = usePosts()
+  const { posts, loading, toggleLike, toggleBookmark, addComment, addReply, deletePost } = usePosts()
   const post = posts.find(p => p._id === id)
 
   if (loading) return <><Navbar title="Post" showBack /><Spinner center /></>
@@ -27,7 +27,9 @@ export default function PostDetailPage() {
       <PostCard post={post}
         onLike={id => toggleLike(id, user?._id)}
         onBookmark={id => toggleBookmark(id, user?._id)}
-        onAddComment={(postId, comment) => addComment(postId, comment, user)} onDeletePost={deletePost} compact />
+        onAddComment={(postId, comment) => addComment(postId, comment, user)} 
+        onAddReply={(postId, commentId, txt) => addReply(postId, commentId, txt, user)}
+        onDeletePost={deletePost} compact />
 
       <div className="px-3 sm:px-5 pt-3 pb-2 border-b border-cream-border">
         <h3 className={`${text.h3} text-ink-muted`}>Replies ({post.comments?.length || 0})</h3>

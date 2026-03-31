@@ -32,5 +32,8 @@ export const postApi = {
   likePost: (id) => axiosInstance.post(`/posts/${id}/like`),
   
   // Add comment to post
-  addComment: (postId, content) => axiosInstance.post(`/posts/${postId}/comments`, { content }),
+  addComment: (postId, content) => axiosInstance.post(`/posts/${postId}/comment`, { content }),
+  
+  // Add reply to comment
+  addReply: (postId, commentId, content) => axiosInstance.post(`/posts/${postId}/comment/${commentId}/reply`, { content }),
 }
