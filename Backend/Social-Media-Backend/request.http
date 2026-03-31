@@ -1,0 +1,111 @@
+###Create User Registration
+POST http://localhost:5000/auth-api/register
+Content-Type: application/json
+
+{
+  "username": "ravi1245",
+  "email": "ravi1223@gmail.com",
+  "password": "1234512",
+  "displayName": "ravi"
+}
+
+###login user
+POST http://localhost:5000/auth-api/login
+Content-Type: application/json
+
+{
+  "email": "ravi12@gmail.com",
+  "password": "12345"
+}
+    
+
+###get user by USERNAME
+GET http://localhost:5000/user-api/ajay
+
+
+###follow user
+POST http://localhost:5000/user-api/69b8031db3f6d4c9d0ced036/follow
+
+###unfollow user
+POST http://localhost:5000/user-api/69b8031db3f6d4c9d0ced036/unfollow
+
+
+### Get followers
+GET http://localhost:5000/user-api/69b8031db3f6d4c9d0ced036/followers
+
+
+### Get following
+GET http://localhost:5000/user-api/69b8031db3f6d4c9d0ced036/following
+
+
+###logout user
+GET http://localhost:5000/auth-api/logout
+
+###Deactivate user
+PATCH http://localhost:5000/user-api/soft-delete/69b7d040400e26e53f937b0b
+
+------------------------------------------------------------------------------------------
+
+### Create Post (with token auth)
+POST http://localhost:5000/posts
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "content": "My first post from frontend!"
+}
+
+### Get All Posts
+GET http://localhost:5000/posts/all
+
+### Get User Posts
+GET http://localhost:5000/posts/user/YOUR_USER_ID
+
+### Get Feed (requires auth)
+GET http://localhost:5000/posts/feed
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Get Single Post
+GET http://localhost:5000/posts/YOUR_POST_ID
+
+### Like Post
+POST http://localhost:5000/posts/YOUR_POST_ID/like
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Add Comment on Post
+POST http://localhost:5000/posts/YOUR_POST_ID/comments
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "content": "Great post!"
+}
+
+### Delete Post
+DELETE http://localhost:5000/posts/YOUR_POST_ID
+Authorization: Bearer YOUR_TOKEN_HERE
+
+------------------------------------------------------------------------------------------
+
+####Add a Comment to the post 
+POST http://localhost:5000/comment-api/add-comment
+Content-Type: application/json
+
+{
+  "post": "69b821008e29c32580efc0fb",
+  "user": "69b80afcfa8d63a133a5c458",
+  "text": "very good text!"
+}
+
+
+### get all comments
+GET http://localhost:5000/comment-api/post/69b821008e29c32580efc0fb
+
+
+
+### like a comment
+POST http://localhost:5000/comment-api/likes/69b829b7969a23f815b18db6
+
+
+### delete a comment
+DELETE http://localhost:5000/comment-api/69b829f3969a23f815b18dbb
