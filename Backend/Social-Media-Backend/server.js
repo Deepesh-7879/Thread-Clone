@@ -21,11 +21,11 @@ config()
 const app = express()
 
 //use cors for backend and frontend interaction
-app.use(cors(
-  { origin: ["http://localhost:3000"], 
+app.use(cors({ 
+    origin: function(origin, callback) { callback(null, true); }, 
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
-   }));
+}));
 app.use(express.json())
 app.use(cookieParser())
 
@@ -47,7 +47,9 @@ const connectDB = async () => {
   try {
     await connect(process.env.DB_URL)
     console.log("DB connection success");
-    app.listen(process.env.PORT, () => console.log("server started"))
+    if (process.env.NODE_ENV !== "production") {
+      app.listen(process.env.PORT || 5000, () => console.log("server started"));
+    }
   } catch (err) {
     console.log("error occured", err)
   }
@@ -103,3 +105,5 @@ app.use((err, req, res, next) => {
     error: err.message,
   });
 });
+
+export default app;
