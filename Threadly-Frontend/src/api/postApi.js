@@ -36,4 +36,10 @@ export const postApi = {
   
   // Add reply to comment
   addReply: (postId, commentId, content) => axiosInstance.post(`/posts/${postId}/comment/${commentId}/reply`, { content }),
+
+  // Bookmark post
+  bookmarkPost: (id) => axiosInstance.post(`/posts/${id}/bookmark`),
+
+  // Share post
+  sharePost: (id) => axiosInstance.post(`/posts/${id}/share`),
 }

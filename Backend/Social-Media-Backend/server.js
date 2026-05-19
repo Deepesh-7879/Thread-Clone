@@ -1,6 +1,6 @@
+import 'dotenv/config'
 import express from "express"
 import {connect} from "mongoose"
-import {config} from "dotenv"
 import cors from "cors"
 import commentRoutes from "./Routes/commentRoutes.js"
 import  userRouter  from './Routes/userRoutes.js'
@@ -14,9 +14,6 @@ import { fileURLToPath } from "url"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-
-config()
-
 
 const app = express()
 
@@ -47,14 +44,15 @@ const connectDB = async () => {
   try {
     await connect(process.env.DB_URL)
     console.log("DB connection success");
-    if (process.env.NODE_ENV !== "production") {
-      app.listen(process.env.PORT || 5000, () => console.log("server started"));
-    }
   } catch (err) {
-    console.log("error occured", err)
+    console.log("DB connection error occurred:", err)
   }
 }
 connectDB()
+
+if (process.env.NODE_ENV !== "production") {
+  app.listen(process.env.PORT || 5000, () => console.log(`server started on port ${process.env.PORT || 5000}`));
+}
 
 //handling the error
 app.use((err, req, res, next) => {

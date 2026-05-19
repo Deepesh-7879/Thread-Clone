@@ -1,9 +1,10 @@
 import express from 'express';
-import authMiddleware from '../middleware/authMiddleware.js';
+import authMiddleware from '../Middleware/authMiddleware.js';
 import Post from '../Models/postModel.js'
 import User from '../Models/userModel.js';
 import multer from 'multer';
 import path from 'path';
+import { storage } from '../config/cloudinary.js';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
@@ -12,27 +13,6 @@ const userRouter = express.Router();
 // recreate __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Create uploads directory if it doesn't exist
-const isVercel = process.env.VERCEL === "1";
-const uploadsDir = isVercel ? '/tmp' : path.join(__dirname, '../uploads/profiles');
-
-if (!isVercel && !fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// Configure multer
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix =
-      Date.now() + '-' + Math.round(Math.random() * 1E9);
-
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
 
 const upload = multer({
   storage,
@@ -170,7 +150,7 @@ userRouter.post('/profile-picture', authMiddleware, upload.single('image'), asyn
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const imageUrl = `/uploads/profiles/${req.file.filename}`;
+    const imageUrl = req.file.path;
 
     const user = await User.findByIdAndUpdate(
       req.userId,

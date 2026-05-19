@@ -7,7 +7,7 @@ import { misc } from '../styles/common'
 
 export default function BookmarksPage() {
   const { user } = useAuth()
-  const { posts, loading, toggleLike, toggleBookmark, addComment, addReply, deletePost } = usePosts()
+  const { posts, loading, toggleLike, toggleBookmark, sharePost, addComment, addReply, deletePost } = usePosts()
   const bookmarked = posts.filter(p => p.bookmarks?.includes(user?._id))
 
   return (
@@ -23,6 +23,7 @@ export default function BookmarksPage() {
         <PostCard key={p._id} post={p}
           onLike={id => toggleLike(id, user?._id)}
           onBookmark={id => toggleBookmark(id, user?._id)}
+          onShare={id => sharePost(id, user?._id)}
           onAddComment={(postId, comment) => addComment(postId, comment, user)} 
           onAddReply={(postId, commentId, txt) => addReply(postId, commentId, txt, user)}
           onDeletePost={deletePost} />

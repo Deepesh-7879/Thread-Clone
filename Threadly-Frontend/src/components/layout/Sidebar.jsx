@@ -55,7 +55,7 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        <button className={btn.sidebarPost} onClick={() => navigate('/')}>
+        <button className={btn.sidebarPost} onClick={() => navigate('/?new_post=' + Date.now())}>
           <span className="lg:hidden text-xl leading-none">+</span>
           <span className="hidden lg:inline text-[15px]">+ New Post</span>
         </button>

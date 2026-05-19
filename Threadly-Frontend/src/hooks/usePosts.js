@@ -117,20 +117,52 @@ export function usePosts() {
     }
   }, [])
 
-  const toggleBookmark = useCallback((postId, userId) => {
-    // Basic local state bookmark since the API doesn't seem fully implemented for it yet
+  const toggleBookmark = useCallback(async (postId, userId) => {
+    // Optimistic UI update
     setPosts(prev =>
       prev.map(p =>
         p._id !== postId
           ? p
           : {
             ...p,
-            bookmarks: p.bookmarks.includes(userId)
+            bookmarks: p.bookmarks?.includes(userId)
               ? p.bookmarks.filter(id => id !== userId)
-              : [...p.bookmarks, userId]
+              : [...(p.bookmarks || []), userId]
           }
       )
     )
+    
+    try {
+      if (userId) {
+        await postApi.bookmarkPost(postId)
+      }
+    } catch (error) {
+      console.error('Error toggling bookmark:', error)
+    }
+  }, [])
+
+  const sharePost = useCallback(async (postId, userId) => {
+    // Optimistic UI update
+    setPosts(prev =>
+      prev.map(p =>
+        p._id !== postId
+          ? p
+          : {
+            ...p,
+            shares: p.shares?.includes(userId)
+              ? p.shares.filter(id => id !== userId)
+              : [...(p.shares || []), userId]
+          }
+      )
+    )
+    
+    try {
+      if (userId) {
+        await postApi.sharePost(postId)
+      }
+    } catch (error) {
+      console.error('Error sharing post:', error)
+    }
   }, [])
 
   const addComment = useCallback(async (postId, comment, currentUser) => {
@@ -214,6 +246,7 @@ export function usePosts() {
     createPost,
     toggleLike,
     toggleBookmark,
+    sharePost,
     addComment,
     addReply,
     deletePost

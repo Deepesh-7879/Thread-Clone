@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Avatar from '../common/Avatar'
 import { uploadImage } from '../../utils/uploadImage'
 import { useAuth } from '../../hooks/useAuth'
@@ -6,7 +6,7 @@ import { input, btn, text, misc } from '../../styles/common'
 
 const MAX = 280
 
-export default function CreatePostForm({ onPost }) {
+export default function CreatePostForm({ onPost, shouldFocus }) {
   const { user } = useAuth()
   const [txt, setTxt] = useState('')
   const [img, setImg] = useState(null)
@@ -15,6 +15,14 @@ export default function CreatePostForm({ onPost }) {
   const [err, setErr] = useState('')
   const [focused, setFocused] = useState(false)
   const fileRef = useRef()
+  const textareaRef = useRef()
+
+  useEffect(() => {
+    if (shouldFocus && textareaRef.current) {
+      textareaRef.current.focus()
+      setFocused(true)
+    }
+  }, [shouldFocus])
 
   const handleImg = async e => {
     const file = e.target.files[0]; if (!file) return
@@ -40,7 +48,7 @@ export default function CreatePostForm({ onPost }) {
       <div className="flex gap-2.5 sm:gap-3">
         <Avatar user={user} size="md" />
         <div className="flex-1 min-w-0">
-          <textarea value={txt} onChange={e => setTxt(e.target.value)}
+          <textarea ref={textareaRef} value={txt} onChange={e => setTxt(e.target.value)}
             onFocus={() => setFocused(true)}
             placeholder="What's on your mind?"
             rows={focused ? 3 : 2}

@@ -1,36 +1,18 @@
 import express from 'express';
 const postRouter = express.Router();
 
-import authMiddleware from '../middleware/authMiddleware.js';
+import authMiddleware from '../Middleware/authMiddleware.js';
 import Post from '../Models/postModel.js'
 import User from '../Models/userModel.js'
 import multer from 'multer';
 import path from 'path';
+import { storage } from '../config/cloudinary.js';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 // Fix __dirname in ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Create uploads directory if it doesn't exist
-const isVercel = process.env.VERCEL === "1";
-const uploadsDir = isVercel ? '/tmp' : path.join(__dirname, '../uploads/posts');
-
-if (!isVercel && !fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
 
 const upload = multer({
   storage,
@@ -56,7 +38,7 @@ postRouter.post("/", authMiddleware, upload.array("images",4), async (req,res)=>
     const { content } = req.body;
 
     const image = req.files && req.files.length > 0
-      ? `/uploads/posts/${req.files[0].filename}`
+      ? req.files[0].path
       : null;
 
     const post = new Post({
@@ -231,6 +213,36 @@ postRouter.post('/:postId/share',authMiddleware, async (req, res) => {
     res.json(post);
 
   } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Bookmark post
+postRouter.post('/:postId/bookmark', authMiddleware, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    const alreadyBookmarked = post.bookmarks?.includes(req.userId);
+
+    if (alreadyBookmarked) {
+      // Unbookmark
+      post.bookmarks = post.bookmarks.filter(id => id.toString() !== req.userId.toString());
+    } else {
+      // Bookmark
+      post.bookmarks.push(req.userId);
+    }
+
+    await post.save();
+    await post.populate('author', 'username name profileImage verified');
+
+    res.json(post);
+
+  } catch (error) {
+    console.error('Bookmark post error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

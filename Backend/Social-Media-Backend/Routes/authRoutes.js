@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import User from "../Models/userModel.js"
 import { authentication } from "../Services/authService.js"
-import authMiddleware from "../middleware/authMiddleware.js"
+import authMiddleware from "../Middleware/authMiddleware.js"
 
 const authRouter = express.Router()
 

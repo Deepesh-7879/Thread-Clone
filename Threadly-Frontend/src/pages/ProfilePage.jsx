@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import Navbar from '../components/layout/Navbar'
 import Avatar from '../components/common/Avatar'
@@ -17,7 +17,7 @@ import { profile, text, btn, input, misc } from '../styles/common'
 export default function ProfilePage() {
   const { username } = useParams()
   const { user: currentUser, updateUser } = useAuth()
-  const { posts, loading, toggleLike, toggleBookmark, addComment, deletePost } = usePosts()
+  const { posts, loading, toggleLike, toggleBookmark, sharePost, addComment, deletePost } = usePosts()
   const [profileUser, setProfileUser] = useState(null)
   const [profilePosts, setProfilePosts] = useState([])
   const [profileLoading, setProfileLoading] = useState(true)
@@ -25,6 +25,11 @@ export default function ProfilePage() {
   const [editForm, setEditForm] = useState({ name: currentUser?.name || '', bio: currentUser?.bio || '' })
   const [activeTab, setActiveTab] = useState('posts')
   const [followModal, setFollowModal] = useState({ isOpen: false, type: 'followers' })
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [shareCopied, setShareCopied] = useState(false)
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     setFollowModal(prev => ({ ...prev, isOpen: false }));
@@ -87,7 +92,7 @@ export default function ProfilePage() {
     } catch (err) { }
   }
 
-  const handleBookmark = (postId) => {
+  const handleBookmark = async (postId) => {
     setProfilePosts(prev => prev.map(p => {
       if (p._id === postId) {
         const isBookmarked = p.bookmarks?.includes(currentUser?._id);
@@ -98,6 +103,29 @@ export default function ProfilePage() {
       }
       return p;
     }));
+    try {
+      if (currentUser) {
+        await postApi.bookmarkPost(postId);
+      }
+    } catch (err) { }
+  }
+
+  const handleShare = async (postId) => {
+    setProfilePosts(prev => prev.map(p => {
+      if (p._id === postId) {
+        const isShared = p.shares?.includes(currentUser?._id);
+        return {
+          ...p,
+          shares: isShared ? p.shares.filter(id => id !== currentUser?._id) : [...(p.shares || []), currentUser?._id]
+        };
+      }
+      return p;
+    }));
+    try {
+      if (currentUser) {
+        await postApi.sharePost(postId);
+      }
+    } catch (err) { }
   }
 
   const handleAddComment = async (postId, comment) => {
@@ -123,10 +151,51 @@ export default function ProfilePage() {
   const PALETTE = ['#c2603b', '#3b7ac2', '#3b8c5a', '#8c3b7a', '#7a8c3b']
   const bannerColor = PALETTE[(profileUser?._id?.charCodeAt?.(1) || 0) % PALETTE.length]
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setImageFile(file)
+      setImagePreview(URL.createObjectURL(file))
+    }
+  }
+
   const handleEditSave = async () => {
-    updateUser({ name: editForm.name, bio: editForm.bio })
-    setProfileUser(prev => ({ ...prev, name: editForm.name, bio: editForm.bio }))
-    setEditOpen(false)
+    setUploadingImage(true)
+    try {
+      // Upload profile image if changed
+      if (imageFile) {
+        const formData = new FormData()
+        formData.append('image', imageFile)
+        const imgRes = await userApi.uploadProfilePicture(formData)
+        const newImageUrl = imgRes.data.profileImage
+        updateUser({ name: editForm.name, bio: editForm.bio, profileImage: newImageUrl })
+        setProfileUser(prev => ({ ...prev, name: editForm.name, bio: editForm.bio, profileImage: newImageUrl }))
+      } else {
+        updateUser({ name: editForm.name, bio: editForm.bio })
+        setProfileUser(prev => ({ ...prev, name: editForm.name, bio: editForm.bio }))
+      }
+      await userApi.updateProfile({ name: editForm.name, bio: editForm.bio })
+    } catch (err) {
+      console.error('Error saving profile:', err)
+    } finally {
+      setUploadingImage(false)
+      setImageFile(null)
+      setImagePreview(null)
+      setEditOpen(false)
+    }
+  }
+
+  const handleShareProfile = async () => {
+    const profileUrl = `${window.location.origin}/profile/${profileUser?.username}`
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${profileUser?.name} on Threadly`, text: `Check out ${profileUser?.name}'s profile on Threadly!`, url: profileUrl })
+      } catch (e) { /* user cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(profileUrl)
+      setShareCopied(true)
+      setTimeout(() => setShareCopied(false), 2000)
+    }
   }
 
   if (profileLoading) return <div><Navbar title="Profile" showBack /><Spinner center /></div>
@@ -141,7 +210,11 @@ export default function ProfilePage() {
         <div className="absolute -bottom-7 left-4 sm:left-5">
           <Avatar user={profileUser} size="lg" className="border-[3px] border-cream" />
         </div>
-        <div className="absolute top-3 right-3 sm:right-4">
+        <div className="absolute top-3 right-3 sm:right-4 flex items-center gap-2">
+          <button className={btn.secondarySm} onClick={handleShareProfile}
+            title="Share Profile" style={{ position: 'relative' }}>
+            {shareCopied ? '✓ Copied!' : '↗ Share'}
+          </button>
           {isOwn
             ? <button className={btn.secondarySm} onClick={() => setEditOpen(true)}>Edit Profile</button>
             : <FollowButton targetUserId={profileUser?._id} size="sm" />}
@@ -191,13 +264,31 @@ export default function ProfilePage() {
         <PostCard key={p._id} post={p}
           onLike={handleLike}
           onBookmark={handleBookmark}
+          onShare={handleShare}
           onAddComment={handleAddComment}
           onDeletePost={isOwn ? handleDeletePost : null} />
       ))}
 
       {/* Edit Modal */}
-      <Modal isOpen={editOpen} onClose={() => setEditOpen(false)} title="Edit Profile">
+      <Modal isOpen={editOpen} onClose={() => { setEditOpen(false); setImageFile(null); setImagePreview(null) }} title="Edit Profile">
         <div className="flex flex-col gap-4">
+          {/* Profile Image Upload */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
+              {imagePreview ? (
+                <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-accent">
+                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <Avatar user={profileUser} size="xl" />
+              )}
+              <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-white text-lg">📷</span>
+              </div>
+            </div>
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+            <span className="text-xs text-ink-muted">Click to change photo</span>
+          </div>
           {[{ key: 'name', label: 'Display Name' }, { key: 'bio', label: 'Bio', multi: true }].map(f => (
             <div key={f.key}>
               <label className={text.label}>{f.label}</label>
@@ -207,8 +298,10 @@ export default function ProfilePage() {
             </div>
           ))}
           <div className="flex gap-2.5 mt-1">
-            <button className={btn.secondaryLg} onClick={() => setEditOpen(false)}>Cancel</button>
-            <button className={btn.primaryLg} onClick={handleEditSave}>Save</button>
+            <button className={btn.secondaryLg} onClick={() => { setEditOpen(false); setImageFile(null); setImagePreview(null) }}>Cancel</button>
+            <button className={btn.primaryLg} onClick={handleEditSave} disabled={uploadingImage}>
+              {uploadingImage ? 'Saving...' : 'Save'}
+            </button>
           </div>
         </div>
       </Modal>

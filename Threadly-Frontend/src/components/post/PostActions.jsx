@@ -13,15 +13,33 @@ function ActionBtn({ icon, activeIcon, count, active, onClick, activeColor, titl
     </button>
   )
 }
-export default function PostActions({ post, currentUserId, onLike, onComment, onBookmark }) {
+export default function PostActions({ post, currentUserId, onLike, onComment, onBookmark, onShare }) {
   const liked = post.likes?.includes(currentUserId)
   const bookmarked = post.bookmarks?.includes(currentUserId)
+  const shared = post.shares?.includes(currentUserId)
+  const [copied, setCopied] = useState(false)
+
+  const handleShareClick = async () => {
+    onShare?.(post._id)
+    
+    const postUrl = `${window.location.origin}/post/${post._id}`
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Check out this post on Threadly', text: post.content, url: postUrl })
+      } catch (e) { /* user cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(postUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
   return (
     <div className="flex items-center gap-1 mt-2.5">
       <ActionBtn icon="💬" count={post.comments?.length||0} active={false} onClick={onComment} activeColor="#3b7ac2" title="Comment"/>
       <ActionBtn icon="🤍" activeIcon="❤️" count={post.likes?.length||0} active={liked} onClick={()=>onLike(post._id)} activeColor="#e05577" title="Like"/>
       <ActionBtn icon="🔖" activeIcon="🔖" count={null} active={bookmarked} onClick={()=>onBookmark(post._id)} activeColor="#c2603b" title="Bookmark"/>
-      <ActionBtn icon="↗" count={null} active={false} onClick={()=>{}} activeColor="#3b8c5a" title="Share"/>
+      <ActionBtn icon="↗" count={post.shares?.length||0} active={shared} onClick={handleShareClick} activeColor="#3b8c5a" title={copied ? "Copied!" : "Share"}/>
     </div>
   )
 }

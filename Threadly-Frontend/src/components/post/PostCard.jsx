@@ -8,7 +8,7 @@ import { formatDate } from '../../utils/formatDate'
 import { useAuth } from '../../hooks/useAuth'
 import { post as P, text } from '../../styles/common'
 
-export default function PostCard({ post, onLike, onBookmark, onAddComment, onAddReply, onDeletePost, compact = false }) {
+export default function PostCard({ post, onLike, onBookmark, onShare, onAddComment, onAddReply, onDeletePost, compact = false }) {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [showComments, setShowComments] = useState(false)
@@ -60,13 +60,13 @@ export default function PostCard({ post, onLike, onBookmark, onAddComment, onAdd
           {/* Image */}
           {post.image && (
             <div className={P.image}>
-              <img src={post.image} alt="" className="w-full max-h-64 sm:max-h-80 object-cover" />
+              <img src={post.image.startsWith('http') ? post.image : `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}${post.image}`} alt="" className="w-full max-h-64 sm:max-h-80 object-cover" />
             </div>
           )}
 
           {/* Actions */}
           <PostActions post={post} currentUserId={user?._id}
-            onLike={onLike} onBookmark={onBookmark}
+            onLike={onLike} onBookmark={onBookmark} onShare={onShare}
             onComment={() => setShowComments(v => !v)} />
 
           {/* Comments */}
