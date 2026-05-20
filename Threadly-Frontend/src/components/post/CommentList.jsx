@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Avatar from '../common/Avatar'
 import { formatDate } from '../../utils/formatDate'
 import { useAuth } from '../../hooks/useAuth'
@@ -6,6 +7,7 @@ import { input, btn, text } from '../../styles/common'
 
 export default function CommentList({ comments = [], postId, onAddComment, onAddReply }) {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [txt, setTxt] = useState('')
   const [sub, setSub] = useState(false)
   const [replyingTo, setReplyingTo] = useState(null)
@@ -42,7 +44,13 @@ export default function CommentList({ comments = [], postId, onAddComment, onAdd
             <div className="flex items-center gap-3">
               <button 
                 className="text-[12px] font-medium text-ink-muted hover:text-ink transition-colors cursor-pointer"
-                onClick={() => setReplyingTo(replyingTo === c._id ? null : c._id)}
+                onClick={() => {
+                  if (!user) {
+                    navigate('/login')
+                  } else {
+                    setReplyingTo(replyingTo === c._id ? null : c._id)
+                  }
+                }}
               >
                 Reply
               </button>
@@ -88,7 +96,7 @@ export default function CommentList({ comments = [], postId, onAddComment, onAdd
       ))}
 
       {/* Main Comment Input */}
-      {user && (
+      {user ? (
         <form onSubmit={handle} className="flex gap-2 mt-3 items-center">
           <Avatar user={user} size="xs" />
           <input value={txt} onChange={e => setTxt(e.target.value)}
@@ -96,6 +104,11 @@ export default function CommentList({ comments = [], postId, onAddComment, onAdd
           <button type="submit" disabled={!txt.trim() || sub}
             className={`${btn.primarySm} ${(!txt.trim() || sub) ? 'opacity-50' : ''} shrink-0`}>Post</button>
         </form>
+      ) : (
+        <div className="mt-3 flex items-center justify-between p-3 bg-cream-dark rounded-xl border border-cream-border">
+          <span className="text-[13px] text-ink-light font-medium">Log in to join the conversation</span>
+          <button onClick={() => navigate('/login')} className={btn.primarySm}>Log In</button>
+        </div>
       )}
     </div>
   )

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import Navbar from '../components/layout/Navbar'
 import Avatar from '../components/common/Avatar'
 import VerifiedBadge from '../components/common/VerifiedBadge'
@@ -16,6 +16,7 @@ import { profile, text, btn, input, misc } from '../styles/common'
 
 export default function ProfilePage() {
   const { username } = useParams()
+  const navigate = useNavigate()
   const { user: currentUser, updateUser } = useAuth()
   const { posts, loading, toggleLike, toggleBookmark, sharePost, addComment, deletePost } = usePosts()
   const [profileUser, setProfileUser] = useState(null)
@@ -75,6 +76,10 @@ export default function ProfilePage() {
   const userPosts = profilePosts;
 
   const handleLike = async (postId) => {
+    if (!currentUser) {
+      navigate('/login')
+      return
+    }
     setProfilePosts(prev => prev.map(p => {
       if (p._id === postId) {
         const isLiked = p.likes?.includes(currentUser?._id);
@@ -93,6 +98,10 @@ export default function ProfilePage() {
   }
 
   const handleBookmark = async (postId) => {
+    if (!currentUser) {
+      navigate('/login')
+      return
+    }
     setProfilePosts(prev => prev.map(p => {
       if (p._id === postId) {
         const isBookmarked = p.bookmarks?.includes(currentUser?._id);
@@ -111,6 +120,7 @@ export default function ProfilePage() {
   }
 
   const handleShare = async (postId) => {
+    if (!currentUser) return
     setProfilePosts(prev => prev.map(p => {
       if (p._id === postId) {
         const isShared = p.shares?.includes(currentUser?._id);
@@ -129,6 +139,10 @@ export default function ProfilePage() {
   }
 
   const handleAddComment = async (postId, comment) => {
+    if (!currentUser) {
+      navigate('/login')
+      return
+    }
     const newComment = {
       _id: Date.now().toString(),
       user: { _id: currentUser?._id, name: currentUser?.name || 'User', username: currentUser?.username, profilePicture: currentUser?.profilePicture },
@@ -234,10 +248,22 @@ export default function ProfilePage() {
         </div>
         {profileUser?.bio && <p className={`${text.bodyMd} mb-3`}>{profileUser.bio}</p>}
         <div className="flex gap-4 sm:gap-6 flex-wrap">
-          <span className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setFollowModal({ isOpen: true, type: 'following' })}>
+          <span className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => {
+            if (!currentUser) {
+              navigate('/login')
+            } else {
+              setFollowModal({ isOpen: true, type: 'following' })
+            }
+          }}>
             <strong className={text.stat}>{profileUser?.following?.length || 0}</strong> <span className={text.statLabel}>Following</span>
           </span>
-          <span className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setFollowModal({ isOpen: true, type: 'followers' })}>
+          <span className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => {
+            if (!currentUser) {
+              navigate('/login')
+            } else {
+              setFollowModal({ isOpen: true, type: 'followers' })
+            }
+          }}>
             <strong className={text.stat}>{profileUser?.followers?.length || 0}</strong> <span className={text.statLabel}>Followers</span>
           </span>
           <span><strong className={text.stat}>{userPosts.length}</strong> <span className={text.statLabel}>Posts</span></span>

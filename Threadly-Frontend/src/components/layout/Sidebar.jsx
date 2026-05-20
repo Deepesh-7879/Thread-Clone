@@ -25,13 +25,23 @@ export default function Sidebar() {
     : p === '/' ? location.pathname === '/'
     : location.pathname.startsWith(p)
 
-  const go = p => p === '/profile/me' ? navigate(`/profile/${user?.username}`) : navigate(p)
+  const go = p => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+    if (p === '/profile/me') {
+      navigate(`/profile/${user.username}`)
+    } else {
+      navigate(p)
+    }
+  }
 
   return (
     <>
       {/* Desktop & tablet sidebar */}
       <aside className={nav.sidebar}>
-        <div className="px-2 lg:px-3 pb-4 sm:pb-5 cursor-pointer" onClick={() => navigate('/')}>
+        <div className="px-2 lg:px-3 pb-4 sm:pb-5 cursor-pointer" onClick={() => navigate(user ? '/' : '/login')}>
           <span className="font-display font-bold text-accent tracking-tight">
             <span className="hidden lg:inline text-2xl">thread<span className="text-bark">ly</span></span>
             <span className="lg:hidden text-xl">T</span>
@@ -55,7 +65,7 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        <button className={btn.sidebarPost} onClick={() => navigate('/?new_post=' + Date.now())}>
+        <button className={btn.sidebarPost} onClick={() => navigate(user ? '/?new_post=' + Date.now() : '/login')}>
           <span className="lg:hidden text-xl leading-none">+</span>
           <span className="hidden lg:inline text-[15px]">+ New Post</span>
         </button>

@@ -9,7 +9,7 @@ import Avatar from '../components/common/Avatar'
 import { usePosts } from '../hooks/usePosts'
 import { useAuth } from '../hooks/useAuth'
 import { userApi } from '../api/userApi'
-import { card, input, text } from '../styles/common'
+import { card, text } from '../styles/common'
 
 export default function HomePage() {
   const { user } = useAuth()
@@ -65,10 +65,6 @@ export default function HomePage() {
       </div>
 
       <aside className="hidden xl:flex w-75 shrink-0 p-5 flex-col gap-5">
-        <div className={input.searchWrapper}>
-          <span className="text-ink-muted text-sm">◎</span>
-          <input placeholder="Search Threadly" className={input.search} />
-        </div>
         <div className={card.section}>
           <div className="px-4 py-3 border-b border-cream-border">
             <h3 className={text.h3}>Who to follow</h3>

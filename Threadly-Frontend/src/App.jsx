@@ -13,10 +13,16 @@ import NotificationsPage  from './pages/NotificationsPage'
 import BookmarksPage      from './pages/BookmarksPage'
 import DMPage             from './pages/DMPage'             
 
+import { useAuth }        from './hooks/useAuth'
+import Spinner            from './components/common/Spinner'
+
 function AppLayout() {
   const { pathname } = useLocation()
+  const { loading } = useAuth()
   const isAuth = ['/login', '/register'].includes(pathname)
   const isDM = pathname.startsWith('/messages')           
+
+  if (loading) return <Spinner center />
 
   if (isAuth) return (
     <Routes>
@@ -40,22 +46,20 @@ function AppLayout() {
   )
 
   return (
-    <ProtectedRoute>
-      <div className="flex max-w-300 mx-auto min-h-screen">
-        <Sidebar />
-        <main className="flex-1 min-w-0 pb-16 md:pb-0">
-          <Routes>
-            <Route path="/"                  element={<HomePage />} />
-            <Route path="/explore"           element={<SearchPage />} />
-            <Route path="/notifications"     element={<NotificationsPage />} />
-            <Route path="/bookmarks"         element={<BookmarksPage />} />
-            <Route path="/profile/:username" element={<ProfilePage />} />
-            <Route path="/post/:id"          element={<PostDetailPage />} />
-            <Route path="*"                  element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
-      </div>
-    </ProtectedRoute>
+    <div className="flex max-w-300 mx-auto min-h-screen">
+      <Sidebar />
+      <main className="flex-1 min-w-0 pb-16 md:pb-0">
+        <Routes>
+          <Route path="/"                  element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+          <Route path="/explore"           element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
+          <Route path="/notifications"     element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+          <Route path="/bookmarks"         element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
+          <Route path="/profile/:username" element={<ProfilePage />} />
+          <Route path="/post/:id"          element={<ProtectedRoute><PostDetailPage /></ProtectedRoute>} />
+          <Route path="*"                  element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+    </div>
   )
 }
 
