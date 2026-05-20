@@ -19,10 +19,12 @@ export default function PostActions({ post, currentUserId, onLike, onComment, on
   const shared = post.shares?.includes(currentUserId)
   const [copied, setCopied] = useState(false)
 
+  const getShareBaseUrl = () => window.location.href.split('#')[0].replace(/\/$/, '')
+
   const handleShareClick = async () => {
     onShare?.(post._id)
     
-    const postUrl = `${window.location.origin}/post/${post._id}`
+    const postUrl = `${getShareBaseUrl()}#/post/${post._id}`
     if (navigator.share) {
       try {
         await navigator.share({ title: 'Check out this post on Threadly', text: post.content, url: postUrl })

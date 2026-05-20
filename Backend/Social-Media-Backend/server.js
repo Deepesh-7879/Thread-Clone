@@ -50,9 +50,7 @@ const connectDB = async () => {
 }
 connectDB()
 
-if (process.env.NODE_ENV !== "production") {
-  app.listen(process.env.PORT || 5000, () => console.log(`server started on port ${process.env.PORT || 5000}`));
-}
+app.listen(process.env.PORT || 5000, () => console.log(`server started on port ${process.env.PORT || 5000}`));
 
 //handling the error
 app.use((err, req, res, next) => {

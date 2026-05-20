@@ -199,8 +199,10 @@ export default function ProfilePage() {
     }
   }
 
+  const getShareBaseUrl = () => window.location.href.split('#')[0].replace(/\/$/, '')
+
   const handleShareProfile = async () => {
-    const profileUrl = `${window.location.origin}/profile/${profileUser?.username}`
+    const profileUrl = `${getShareBaseUrl()}#/profile/${profileUser?.username}`
     if (navigator.share) {
       try {
         await navigator.share({ title: `${profileUser?.name} on Threadly`, text: `Check out ${profileUser?.name}'s profile on Threadly!`, url: profileUrl })

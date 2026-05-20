@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { DMProvider } from './context/DMContext'           
 import ProtectedRoute from './components/layout/ProtectedRoute'
@@ -67,9 +67,9 @@ export default function App() {
   return (
     <AuthProvider>
       <DMProvider>                                         
-        <BrowserRouter>
+        <HashRouter>
           <AppLayout />
-        </BrowserRouter>
+        </HashRouter>
       </DMProvider>                                 
     </AuthProvider>
   )
