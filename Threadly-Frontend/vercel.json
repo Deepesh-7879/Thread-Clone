@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://thread-clone-backend-1-zwlq.onrender.com/api/:path*"
+    },
+    {
+      "source": "/uploads/:path*",
+      "destination": "https://thread-clone-backend-1-zwlq.onrender.com/uploads/:path*"
+    }
+  ]
+}

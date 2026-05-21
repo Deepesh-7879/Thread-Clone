@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
+import { authApi } from '../api/authApi'
 import { auth, input, btn, text } from '../styles/common'
 
 export default function RegisterPage() {
-  const { register } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({ name: '', username: '', email: '', password: '' })
   const [error, setError] = useState('')
@@ -16,11 +15,11 @@ export default function RegisterPage() {
     if (form.password.length < 6) { setError('Password must be at least 6 characters.'); return }
     setLoading(true)
     try {
-      await register(form.name, form.username, form.email, form.password);
+      await authApi.register(form.name, form.username, form.email, form.password)
       navigate('/login', { state: { message: 'Registration successful! Please login.' } })
     }
     catch (err) {
-      setError(err.message || 'Registration failed. Please try again.')
+      setError(err.response?.data?.error || err.response?.data?.message || err.message || 'Registration failed. Please try again.')
     }
     finally { setLoading(false) }
   }

@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
       localStorage.setItem('threadly_token', token)
       setUser(user)
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Login failed')
+      throw new Error(error.response?.data?.error || error.response?.data?.message || 'Login failed')
     }
   }
 
@@ -46,7 +46,7 @@ export function AuthProvider({ children }) {
       // Registration successful, but user needs to login
       return { success: true, message: response.data.message }
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Registration failed')
+      throw new Error(error.response?.data?.error || error.response?.data?.message || 'Registration failed')
     }
   }
 
