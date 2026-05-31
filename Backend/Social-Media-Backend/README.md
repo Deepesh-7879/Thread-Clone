@@ -70,7 +70,7 @@ npm start               # production
 ### Posts — `/api/post-api`
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| POST | `/` | 🔒 | Create post (up to 4 images) |
+| POST | `/` | 🔒 | Create post (up to 10 images) |
 | GET | `/feed` | 🔒 | Personalized feed |
 | GET | `/all` | ❌ | All posts (explore) |
 | GET | `/:postId` | ❌ | Single post |
